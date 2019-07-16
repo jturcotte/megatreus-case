@@ -31,7 +31,7 @@ washer_radius     = 4 * screw_hole_radius;
 back_screw_hole_offset = 0;
 
 /* Distance between halves. */
-hand_separation        = 20;
+hand_separation        = 40;
 
 /* The approximate size of switch holes. Used to determine how
    thick walls can be, i.e. how much room around each switch hole to
@@ -48,7 +48,7 @@ n_rows = 5;
 n_cols = 5;
 
 /* Number of thumb keys (per hand), try 1 or 2. */
-n_thumb_keys = 2;
+n_thumb_keys = 1;
 
 /* The width of the USB cable hole in the spacer. */
 cable_hole_width = 12;
@@ -122,6 +122,17 @@ module thumb_key(position, size) {
   }
 }
 
+module outside_key(position, size) {
+  /* Create a hole for a 1x1.5 unit thumb key. */
+  translate(position) {
+    scale([1.5, 1]) {
+      translate(-position) {
+        regular_key(position, size);
+      }
+    }
+  }
+}
+
 module column (bottom_position, switch_holes, key_size=key_hole_size) {
   /* Create a column of keys. */
   translate(bottom_position) {
@@ -130,6 +141,19 @@ module column (bottom_position, switch_holes, key_size=key_hole_size) {
         switch_hole([0, i*column_spacing,-1]);
       } else {
         regular_key([0, i*column_spacing,-1], key_size);
+      }
+    }
+  }
+}
+
+module outside_column (bottom_position, switch_holes, key_size=key_hole_size) {
+  /* Create a column of keys. */
+  translate(bottom_position) {
+    for (i = [0:(n_rows-1)]) {
+      if (switch_holes == true) {
+        switch_hole([0, i*column_spacing,-1]);
+      } else {
+        outside_key([0, i*column_spacing,-1], key_size);
       }
     }
   }
@@ -165,16 +189,25 @@ module right_half (switch_holes=true, key_size=key_hole_size) {
   thumb_key_offset = y_offset + 1.25 * column_spacing;
   rotate_half() {
     add_hand_separation() {
-      for (j=[0:(n_thumb_keys-1)]) {
+        // FIXME: Move to inside_column
+      for (j=[0:1]) {
         if (switch_holes == true) {
-          switch_hole([x_offset + row_spacing, thumb_key_offset + j * 1.5 * column_spacing,-1]);
+          switch_hole([x_offset, thumb_key_offset + j * 1.5 * column_spacing,-1]);
         } else {
-          thumb_key([x_offset + row_spacing, thumb_key_offset + j * 1.5 * column_spacing,-1], key_size);
+          thumb_key([x_offset, thumb_key_offset + j * 1.5 * column_spacing,-1], key_size);
         }
       }
-      for (j=[0:(n_cols-1)]) {
+      // FIXME: Add param for num x and y thumb keys
+      //column([x_offset, thumb_key_offset + 2 * 1.5 * column_spacing], switch_holes, key_size);
+      if (switch_holes == true) {
+        switch_hole([x_offset, thumb_key_offset + 1 * 1.5 * column_spacing + 1.25 * column_spacing,-1]);
+      } else {
+        regular_key([x_offset, thumb_key_offset + 1 * 1.5 * column_spacing + 1.25 * column_spacing,-1], key_size);
+      }
+      for (j=[0:(n_cols-2)]) {
         column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[j]], switch_holes, key_size);
       }
+      outside_column([x_offset + (n_cols-1+n_thumb_keys+0.25)*row_spacing, y_offset + staggering_offsets[n_cols - 1]], switch_holes, key_size);
     }
   }
 }
@@ -201,7 +234,7 @@ module screw_hole(radius, offset_radius, position, direction) {
 
 module right_screw_holes(hole_radius) {
   /* coordinates of the back right screw hole before rotation... */
-  back_right = [(n_cols+n_thumb_keys)*row_spacing,
+  back_right = [(n_cols+n_thumb_keys+0.25)*row_spacing,
                staggering_offsets[n_cols-1] + n_rows * column_spacing];
   /* and after */
   tmp = rz_fun(back_right, angle, [0, 2.25*column_spacing]);
@@ -214,7 +247,7 @@ module right_screw_holes(hole_radius) {
                  [row_spacing, 0],
                  [-nudge, -nudge]);
       screw_hole(hole_radius, washer_radius,
-                 [(n_cols+n_thumb_keys)*row_spacing, staggering_offsets[n_cols-1]],
+                 [(n_cols+n_thumb_keys+0.25)*row_spacing, staggering_offsets[n_cols-1]],
                  [nudge, -nudge]);
       screw_hole(hole_radius, washer_radius,
                  back_right,
