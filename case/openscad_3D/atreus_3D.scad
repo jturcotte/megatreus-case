@@ -31,7 +31,7 @@ washer_radius     = 4 * screw_hole_radius;
 back_screw_hole_offset = 0;
 
 /* Distance between halves. */
-hand_separation        = 0;
+hand_separation        = 20;
 
 /* The approximate size of switch holes. Used to determine how
    thick walls can be, i.e. how much room around each switch hole to
@@ -44,18 +44,18 @@ use_notched_holes = true;
 
 /* Number of rows and columns in the matrix. You need to update
    staggering_offsets if you change n_cols. */
-n_rows = 4;
+n_rows = 5;
 n_cols = 5;
 
 /* Number of thumb keys (per hand), try 1 or 2. */
-n_thumb_keys = 1;
+n_thumb_keys = 2;
 
 /* The width of the USB cable hole in the spacer. */
 cable_hole_width = 12;
 
 /* Vertical column staggering offsets. The first element should
    be zero. */
-staggering_offsets = [0, 5, 11, 6, 3];
+staggering_offsets = [0, 0, 6, 1, -2];
 
 /* Whether or not to split the spacer into quarters. */
 quarter_spacer = false;
@@ -162,14 +162,14 @@ module right_half (switch_holes=true, key_size=key_hole_size) {
      spacer(). */
   x_offset = 0.5 * row_spacing;
   y_offset = 0.5 * column_spacing;
-  thumb_key_offset = y_offset + 0.5 * column_spacing;
+  thumb_key_offset = y_offset + 1.25 * column_spacing;
   rotate_half() {
     add_hand_separation() {
       for (j=[0:(n_thumb_keys-1)]) {
         if (switch_holes == true) {
-          switch_hole([x_offset + j*row_spacing, thumb_key_offset,-1]);
+          switch_hole([x_offset + row_spacing, thumb_key_offset + j * 1.5 * column_spacing,-1]);
         } else {
-          thumb_key([x_offset + j*row_spacing, thumb_key_offset,-1], key_size);
+          thumb_key([x_offset + row_spacing, thumb_key_offset + j * 1.5 * column_spacing,-1], key_size);
         }
       }
       for (j=[0:(n_cols-1)]) {
