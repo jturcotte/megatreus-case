@@ -15,7 +15,7 @@ key_hole_size = 20;
 
 /* rotation angle; the angle between the halves is twice this
    number */
-angle = 10;
+angle = 12;
 
 /* The radius of screw holes. Holes will be slightly bigger due
    to the cut width. */
@@ -31,7 +31,7 @@ washer_radius     = 4 * screw_hole_radius;
 back_screw_hole_offset = 0;
 
 /* Distance between halves. */
-hand_separation        = 40;
+hand_separation        = 20;
 
 /* The approximate size of switch holes. Used to determine how
    thick walls can be, i.e. how much room around each switch hole to
@@ -45,7 +45,7 @@ use_notched_holes = true;
 /* Number of rows and columns in the matrix. You need to update
    staggering_offsets if you change n_cols. */
 n_rows = 5;
-n_cols = 5;
+n_cols = 6;
 
 /* Number of thumb keys (per hand), try 1 or 2. */
 n_thumb_keys = 1;
@@ -55,7 +55,7 @@ cable_hole_width = 12;
 
 /* Vertical column staggering offsets. The first element should
    be zero. */
-staggering_offsets = [0, 0, 6, 1, -2];
+staggering_offsets = [0, 0, 5, 0, -5, -10];
 
 /* Whether or not to split the spacer into quarters. */
 quarter_spacer = false;
@@ -199,11 +199,11 @@ module right_half (switch_holes=true, key_size=key_hole_size) {
       }
       // FIXME: Add param for num x and y thumb keys
       //column([x_offset, thumb_key_offset + 2 * 1.5 * column_spacing], switch_holes, key_size);
-      if (switch_holes == true) {
-        switch_hole([x_offset, thumb_key_offset + 1 * 1.5 * column_spacing + 1.25 * column_spacing,-1]);
-      } else {
-        regular_key([x_offset, thumb_key_offset + 1 * 1.5 * column_spacing + 1.25 * column_spacing,-1], key_size);
-      }
+      // if (switch_holes == true) {
+      //   switch_hole([x_offset, thumb_key_offset + 1 * 1.5 * column_spacing + 1.25 * column_spacing,-1]);
+      // } else {
+      //   regular_key([x_offset, thumb_key_offset + 1 * 1.5 * column_spacing + 1.25 * column_spacing,-1], key_size);
+      // }
       for (j=[0:(n_cols-2)]) {
         column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[j]], switch_holes, key_size);
       }
@@ -349,7 +349,7 @@ module quartered_spacer()
 
 translate([0,0,9]) top_plate();
 translate([0, 0, 6]) { switch_plate(); }
-translate([300, 0,0]) { bottom_plate(); }
+translate([350, 0,0]) { bottom_plate(); }
 translate([0,0,3]) spacer();
 translate([0, 0,0]) {
   if (quarter_spacer == true) {
