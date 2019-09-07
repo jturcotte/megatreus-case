@@ -15,7 +15,7 @@ key_hole_size = 20;
 
 /* rotation angle; the angle between the halves is twice this
    number */
-angle = 12;
+angle = 10;
 
 /* The radius of screw holes. Holes will be slightly bigger due
    to the cut width. */
@@ -28,10 +28,10 @@ washer_radius     = 4 * screw_hole_radius;
 /* This constant allows tweaking the location of the screw holes near
    the USB cable. Only useful with small `angle` values. Try the value
    of 10 with angle=0. */
-back_screw_hole_offset = 0;
+back_screw_hole_offset = 5;
 
 /* Distance between halves. */
-hand_separation        = 20;
+hand_separation        = 25;
 
 /* The approximate size of switch holes. Used to determine how
    thick walls can be, i.e. how much room around each switch hole to
@@ -55,7 +55,7 @@ cable_hole_width = 12;
 
 /* Vertical column staggering offsets. The first element should
    be zero. */
-staggering_offsets = [0, 0, 5, 0, -5, -10];
+staggering_offsets = [0, 0, 9, 7, 2, 2];
 
 /* Whether or not to split the spacer into quarters. */
 quarter_spacer = false;
@@ -133,15 +133,19 @@ module outside_key(position, size) {
   }
 }
 
+module key (position, switch_holes, key_size=key_hole_size) {
+  if (switch_holes == true) {
+    switch_hole(position);
+  } else {
+    regular_key(position, key_size);
+  }
+}
+
 module column (bottom_position, switch_holes, key_size=key_hole_size) {
   /* Create a column of keys. */
   translate(bottom_position) {
     for (i = [0:(n_rows-1)]) {
-      if (switch_holes == true) {
-        switch_hole([0, i*column_spacing,-1]);
-      } else {
-        regular_key([0, i*column_spacing,-1], key_size);
-      }
+      key([0, i*column_spacing,-1], switch_holes, key_size);
     }
   }
 }
@@ -180,34 +184,59 @@ module add_hand_separation() {
   }
 }
 
-module right_half (switch_holes=true, key_size=key_hole_size) {
+module right_half (switch_holes=true, key_size=key_hole_size, fake_keys=false) {
   /* Create switch holes or key holes for the right half of the
      keyboard. Different key_sizes are used in top_plate() and
      spacer(). */
   x_offset = 0.5 * row_spacing;
   y_offset = 0.5 * column_spacing;
-  thumb_key_offset = y_offset + 1.25 * column_spacing;
+  thumb_key_offset = y_offset + 1.75 * column_spacing;
+  arrow_key_offset = y_offset + 0.1 * column_spacing;
+
+  // Down arrow
+  key([0, arrow_key_offset], switch_holes, key_size);
+  // Up arrow
+  key([0, arrow_key_offset + column_spacing], switch_holes, key_size);
+  // Right arrow
+  key([row_spacing, arrow_key_offset], switch_holes, key_size);
+
   rotate_half() {
     add_hand_separation() {
+      // 1.5u key
         // FIXME: Move to inside_column
-      for (j=[0:1]) {
+      for (j=[0:0]) {
         if (switch_holes == true) {
           switch_hole([x_offset, thumb_key_offset + j * 1.5 * column_spacing,-1]);
         } else {
           thumb_key([x_offset, thumb_key_offset + j * 1.5 * column_spacing,-1], key_size);
         }
       }
+      // 2x 1u keys above for the inside
       // FIXME: Add param for num x and y thumb keys
-      //column([x_offset, thumb_key_offset + 2 * 1.5 * column_spacing], switch_holes, key_size);
-      // if (switch_holes == true) {
-      //   switch_hole([x_offset, thumb_key_offset + 1 * 1.5 * column_spacing + 1.25 * column_spacing,-1]);
-      // } else {
-      //   regular_key([x_offset, thumb_key_offset + 1 * 1.5 * column_spacing + 1.25 * column_spacing,-1], key_size);
-      // }
+      // column([x_offset, thumb_key_offset + 2 * 1.5 * column_spacing], switch_holes, key_size);
+      for (j=[0:1]) {
+        if (switch_holes == true) {
+          switch_hole([x_offset, thumb_key_offset + j * 1 * column_spacing + 1.25 * column_spacing,-1]);
+        } else {
+          regular_key([x_offset, thumb_key_offset + j * 1 * column_spacing + 1.25 * column_spacing,-1], key_size);
+        }
+      }
+      // Normal keys
       for (j=[0:(n_cols-2)]) {
         column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[j]], switch_holes, key_size);
       }
+
+      // Outside column
       outside_column([x_offset + (n_cols-1+n_thumb_keys+0.25)*row_spacing, y_offset + staggering_offsets[n_cols - 1]], switch_holes, key_size);
+
+      // Just to dig holes at the right spot for spacers
+      if (fake_keys) {
+        if (switch_holes == true) {
+          switch_hole([x_offset + 2*row_spacing, y_offset + 5.2 * column_spacing,-1]);
+        } else {
+          regular_key([x_offset + 2*row_spacing, y_offset + 5.2 * column_spacing,-1], key_size);
+        }
+      }
     }
   }
 }
@@ -256,7 +285,7 @@ module right_screw_holes(hole_radius) {
   }
 
   /* add the screw hole near the cable hole */
-  translate([washer_radius - tmp[0],
+  translate([-tmp[0] + 2 * row_spacing,
              back_screw_hole_offset]) {
     rotate_half() {
       add_hand_separation() {
@@ -275,8 +304,8 @@ module screw_holes(hole_radius) {
   mirror ([1,0,0]) { right_screw_holes(hole_radius); }
 }
 
-module left_half(switch_holes=true, key_size=key_hole_size) {
-  mirror ([1,0,0]) { right_half(switch_holes, key_size); }
+module left_half(switch_holes=true, key_size=key_hole_size, fake_keys=false) {
+  mirror ([1,0,0]) { right_half(switch_holes, key_size, fake_keys); }
 }
 
 module bottom_plate() {
@@ -312,8 +341,8 @@ module spacer() {
       difference() {
         bottom_plate();
         hull() {
-          right_half(switch_holes=false, key_size=switch_hole_size + 3);
-          left_half(switch_holes=false, key_size=switch_hole_size + 3);
+          right_half(switch_holes=false, key_size=switch_hole_size + 3, fake_keys=true);
+          left_half(switch_holes=false, key_size=switch_hole_size + 3, fake_keys=true);
         }
     /* add the USB cable hole: */
     translate([-0.5*cable_hole_width, 2*column_spacing,0]) {
@@ -348,7 +377,8 @@ module quartered_spacer()
 /* Create all four layers. */
 
 translate([0,0,9]) top_plate();
-translate([0, 0, 6]) { switch_plate(); }
+// projection(cut = false) 
+  translate([0, 0, 6]) { switch_plate(); }
 translate([350, 0,0]) { bottom_plate(); }
 translate([0,0,3]) spacer();
 translate([0, 0,0]) {
@@ -358,5 +388,4 @@ translate([0, 0,0]) {
   else {
     spacer();
   }
-
 }
