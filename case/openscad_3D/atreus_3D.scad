@@ -28,7 +28,7 @@ washer_radius     = 4 * screw_hole_radius;
 /* This constant allows tweaking the location of the screw holes near
    the USB cable. Only useful with small `angle` values. Try the value
    of 10 with angle=0. */
-back_screw_hole_offset = 5;
+back_screw_hole_offset = 0;
 
 /* Distance between halves. */
 hand_separation        = 25;
@@ -190,35 +190,31 @@ module right_half (switch_holes=true, key_size=key_hole_size, fake_keys=false) {
      spacer(). */
   x_offset = 0.5 * row_spacing;
   y_offset = 0.5 * column_spacing;
-  thumb_key_offset = y_offset + 1.75 * column_spacing;
-  arrow_key_offset = y_offset + 0.1 * column_spacing;
+  thumb_key_offset = y_offset + 1.25 * column_spacing;
+  arrow_key_offset = y_offset;
 
-  // Down arrow
-  key([0, arrow_key_offset], switch_holes, key_size);
   // Up arrow
   key([0, arrow_key_offset + column_spacing], switch_holes, key_size);
-  // Right arrow
-  key([row_spacing, arrow_key_offset], switch_holes, key_size);
 
   rotate_half() {
     add_hand_separation() {
-      // 1.5u key
+      // 2x 1.5u keys
         // FIXME: Move to inside_column
-      for (j=[0:0]) {
+      for (j=[0:1]) {
         if (switch_holes == true) {
           switch_hole([x_offset, thumb_key_offset + j * 1.5 * column_spacing,-1]);
         } else {
           thumb_key([x_offset, thumb_key_offset + j * 1.5 * column_spacing,-1], key_size);
         }
       }
-      // 2x 1u keys above for the inside
+      // 1u keys above for the inside
       // FIXME: Add param for num x and y thumb keys
       // column([x_offset, thumb_key_offset + 2 * 1.5 * column_spacing], switch_holes, key_size);
-      for (j=[0:1]) {
+      for (j=[0:0]) {
         if (switch_holes == true) {
-          switch_hole([x_offset, thumb_key_offset + j * 1 * column_spacing + 1.25 * column_spacing,-1]);
+          switch_hole([x_offset, thumb_key_offset + j * 1 * column_spacing + 2.75 * column_spacing,-1]);
         } else {
-          regular_key([x_offset, thumb_key_offset + j * 1 * column_spacing + 1.25 * column_spacing,-1], key_size);
+          regular_key([x_offset, thumb_key_offset + j * 1 * column_spacing + 2.75 * column_spacing,-1], key_size);
         }
       }
       // Normal keys
@@ -232,9 +228,9 @@ module right_half (switch_holes=true, key_size=key_hole_size, fake_keys=false) {
       // Just to dig holes at the right spot for spacers
       if (fake_keys) {
         if (switch_holes == true) {
-          switch_hole([x_offset + 2*row_spacing, y_offset + 5.2 * column_spacing,-1]);
+          switch_hole([x_offset + 2*row_spacing, y_offset + 5.125 * column_spacing,-1]);
         } else {
-          regular_key([x_offset + 2*row_spacing, y_offset + 5.2 * column_spacing,-1], key_size);
+          regular_key([x_offset + 2*row_spacing, y_offset + 5.125 * column_spacing,-1], key_size);
         }
       }
     }
