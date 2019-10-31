@@ -194,7 +194,7 @@ module right_half (switch_holes=true, key_size=key_hole_size, fake_keys=false) {
   arrow_key_offset = y_offset;
 
   // Up arrow
-  key([0, arrow_key_offset + column_spacing], switch_holes, key_size);
+  // key([0, arrow_key_offset + column_spacing], switch_holes, key_size);
 
   rotate_half() {
     add_hand_separation() {
@@ -374,7 +374,7 @@ module quartered_spacer()
 
 translate([0,0,9]) top_plate();
 // projection(cut = false) 
-  translate([0, 0, 6]) { switch_plate(); }
+  color("lightblue") translate([0, 0, 6]) { switch_plate(); }
 translate([350, 0,0]) { bottom_plate(); }
 translate([0,0,3]) spacer();
 translate([0, 0,0]) {
