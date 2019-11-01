@@ -122,6 +122,17 @@ module thumb_key(position, size) {
   }
 }
 
+module space_bar(position, size) {
+  /* Create a hole for a 2x1 unit key. */
+  translate(position) {
+    scale([2, 1]) {
+      translate(-position) {
+        regular_key(position, size);
+      }
+    }
+  }
+}
+
 module outside_key(position, size) {
   /* Create a hole for a 1x1.5 unit thumb key. */
   translate(position) {
@@ -133,7 +144,7 @@ module outside_key(position, size) {
   }
 }
 
-module key (position, switch_holes, key_size=key_hole_size) {
+module full_regular_key (position, switch_holes, key_size=key_hole_size) {
   if (switch_holes == true) {
     switch_hole(position);
   } else {
@@ -141,11 +152,27 @@ module key (position, switch_holes, key_size=key_hole_size) {
   }
 }
 
-module column (bottom_position, switch_holes, key_size=key_hole_size) {
+module full_thumb_key (position, switch_holes, key_size=key_hole_size) {
+  if (switch_holes == true) {
+    switch_hole(position);
+  } else {
+    thumb_key(position, key_size);
+  }
+}
+
+module full_space_bar (position, switch_holes, key_size=key_hole_size) {
+  if (switch_holes == true) {
+    switch_hole(position);
+  } else {
+    space_bar(position, key_size);
+  }
+}
+
+module column (bottom_position, switch_holes, key_size=key_hole_size, n_rows_adj=0) {
   /* Create a column of keys. */
   translate(bottom_position) {
-    for (i = [0:(n_rows-1)]) {
-      key([0, i*column_spacing,-1], switch_holes, key_size);
+    for (i = [0:(n_rows+n_rows_adj-1)]) {
+      full_regular_key([0, i*column_spacing,-1], switch_holes, key_size);
     }
   }
 }
@@ -167,6 +194,7 @@ module rotate_half() {
   /* Rotate the right half of the keys around the top left corner of
      the thumb key. Assumes that the thumb key is a 1x1.5 key and that
      it is shifted 0.5*column_spacing up relative to the nearest column. */
+  // FIXME: Rotate on top of top key
   rotation_y_offset = 1.75 * column_spacing;
   for (i=[0:$children-1]) {
     rz(angle, [hand_separation, rotation_y_offset]) {
@@ -184,7 +212,7 @@ module add_hand_separation() {
   }
 }
 
-module right_half (switch_holes=true, key_size=key_hole_size, fake_keys=false) {
+module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=true) {
   /* Create switch holes or key holes for the right half of the
      keyboard. Different key_sizes are used in top_plate() and
      spacer(). */
@@ -194,45 +222,59 @@ module right_half (switch_holes=true, key_size=key_hole_size, fake_keys=false) {
   arrow_key_offset = y_offset;
 
   // Up arrow
-  // key([0, arrow_key_offset + column_spacing], switch_holes, key_size);
+  // full_regular_key([0, arrow_key_offset + column_spacing], switch_holes, key_size);
 
   rotate_half() {
     add_hand_separation() {
       // 2x 1.5u keys
         // FIXME: Move to inside_column
       for (j=[0:1]) {
-        if (switch_holes == true) {
-          switch_hole([x_offset, thumb_key_offset + j * 1.5 * column_spacing,-1]);
-        } else {
-          thumb_key([x_offset, thumb_key_offset + j * 1.5 * column_spacing,-1], key_size);
-        }
+        full_thumb_key([x_offset, thumb_key_offset + j * 1.5 * column_spacing,-1], switch_holes, key_size);
       }
       // 1u keys above for the inside
       // FIXME: Add param for num x and y thumb keys
       // column([x_offset, thumb_key_offset + 2 * 1.5 * column_spacing], switch_holes, key_size);
       for (j=[0:0]) {
-        if (switch_holes == true) {
-          switch_hole([x_offset, thumb_key_offset + j * 1 * column_spacing + 2.75 * column_spacing,-1]);
-        } else {
-          regular_key([x_offset, thumb_key_offset + j * 1 * column_spacing + 2.75 * column_spacing,-1], key_size);
-        }
+        full_regular_key([x_offset, thumb_key_offset + j * 1 * column_spacing + 2.75 * column_spacing,-1], switch_holes, key_size);
       }
+
       // Normal keys
-      for (j=[0:(n_cols-2)]) {
-        column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[j]], switch_holes, key_size);
+      if (really_right_half) {
+        // Space bar hole
+        full_space_bar([x_offset + (0.5+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[0],-1], switch_holes, key_size);
+        // Up arrow
+        full_regular_key([x_offset + (3+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[3],-1], switch_holes, key_size);
+        // Down arrow
+        full_regular_key([x_offset + (3+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[3] - column_spacing,-1], switch_holes, key_size);
+        // Left arrow
+        full_regular_key([x_offset + (2+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[3] - 0.5*column_spacing,-1], switch_holes, key_size);
+        // Right arrow
+        full_regular_key([x_offset + (4+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[3] - 0.5*column_spacing,-1], switch_holes, key_size);
+
+        // One less key, and offset up by one key.
+        for (j=[0:(n_cols-2)]) {
+          column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + column_spacing + staggering_offsets[j]], switch_holes, key_size, -1);
+        }
+      } else {
+        for (j=[0:1]) {
+          column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[j]], switch_holes, key_size);
+        }
+        // One less key, and offset up by one key.
+        for (j=[2:3]) {
+          column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + column_spacing + staggering_offsets[j]], switch_holes, key_size, -1);
+        }
+        // Move the two missing keys a bit lower for easier thumb access
+        thumb_middle_staggering = staggering_offsets[0]+staggering_offsets[4]/2;
+        full_regular_key([x_offset + (2+n_thumb_keys)*row_spacing, y_offset + thumb_middle_staggering,-1], switch_holes, key_size);
+        full_regular_key([x_offset + (3+n_thumb_keys)*row_spacing, y_offset + thumb_middle_staggering,-1], switch_holes, key_size);
+        for (j=[4:(n_cols-2)]) {
+          column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[j]], switch_holes, key_size);
+        }
       }
 
       // Outside column
+      // FIXME: Need larger border
       outside_column([x_offset + (n_cols-1+n_thumb_keys+0.25)*row_spacing, y_offset + staggering_offsets[n_cols - 1]], switch_holes, key_size);
-
-      // Just to dig holes at the right spot for spacers
-      if (fake_keys) {
-        if (switch_holes == true) {
-          switch_hole([x_offset + 2*row_spacing, y_offset + 5.125 * column_spacing,-1]);
-        } else {
-          regular_key([x_offset + 2*row_spacing, y_offset + 5.125 * column_spacing,-1], key_size);
-        }
-      }
     }
   }
 }
@@ -261,54 +303,99 @@ module right_screw_holes(hole_radius) {
   /* coordinates of the back right screw hole before rotation... */
   back_right = [(n_cols+n_thumb_keys+0.25)*row_spacing,
                staggering_offsets[n_cols-1] + n_rows * column_spacing];
+  // front_right = [(n_cols+n_thumb_keys+0.25)*row_spacing, staggering_offsets[n_cols-1]];
+
   /* and after */
   tmp = rz_fun(back_right, angle, [0, 2.25*column_spacing]);
+  // tmp_front = rz_fun(front_right, angle, [0, 2.25*column_spacing]);
 
   nudge = 0.75;
 
   rotate_half() {
     add_hand_separation() {
+      // Back center
+      // screw_hole(hole_radius, washer_radius,
+      //            [row_spacing*0.75, staggering_offsets[n_cols-1] + (n_rows) * column_spacing],
+      //            [-nudge, nudge]);
+      // Front center
       screw_hole(hole_radius, washer_radius,
                  [row_spacing, 0],
                  [-nudge, -nudge]);
+      // Front right
       screw_hole(hole_radius, washer_radius,
-                 [(n_cols+n_thumb_keys+0.25)*row_spacing, staggering_offsets[n_cols-1]],
+                  // FIXME: Proper maths
+                 [(n_cols+n_thumb_keys+0.25)*row_spacing, -1.2 * column_spacing],
                  [nudge, -nudge]);
+      // Back right
       screw_hole(hole_radius, washer_radius,
                  back_right,
                  [nudge, nudge]);
     }
   }
 
+  // translate([washer_radius - tmp[0],
+
+  // Opposite front left
+  // mirror ([1,0,0]) {
+  //   rotate_half() {
+  //     add_hand_separation() {
+  //     screw_hole(hole_radius, washer_radius,
+  //                [row_spacing*0.75, staggering_offsets[n_cols-1] + (n_rows) * column_spacing],
+  //                [-nudge, nudge]);
+  //     screw_hole(hole_radius, washer_radius,
+  //                [row_spacing, 0],
+  //                [-nudge, -nudge]);
+  //     }
+  //   }
+  // }
+
   /* add the screw hole near the cable hole */
-  translate([-tmp[0] + 2 * row_spacing,
-             back_screw_hole_offset]) {
-    rotate_half() {
-      add_hand_separation() {
-        screw_hole(hole_radius,
-                   washer_radius,
-                   back_right,
-                   [nudge, nudge]);
-      }
-    }
+  // translate([washer_radius - tmp[0],
+  // translate([washer_radius - back_right.x,
+  //            back_screw_hole_offset]) {
+  //   rotate_half() {
+  //     add_hand_separation() {
+  //       screw_hole(hole_radius,
+  //                  washer_radius,
+  //                  back_right,
+  //                  [nudge, nudge]);
+  //     }
+  //   }
+  // }
+}
+
+module screw_holes_hull(hole_radius) {
+  /* Create all the screw holes. */
+  union() {
+    hull() { right_screw_holes(hole_radius); }
+    hull() { mirror ([1,0,0]) { right_screw_holes(hole_radius); } }
   }
 }
 
 module screw_holes(hole_radius) {
   /* Create all the screw holes. */
-  right_screw_holes(hole_radius);
-  mirror ([1,0,0]) { right_screw_holes(hole_radius); }
+  union() {
+    right_screw_holes(hole_radius);
+    mirror ([1,0,0]) { right_screw_holes(hole_radius); }
+  }
 }
 
-module left_half(switch_holes=true, key_size=key_hole_size, fake_keys=false) {
-  mirror ([1,0,0]) { right_half(switch_holes, key_size, fake_keys); }
+module left_half(switch_holes=true, key_size=key_hole_size) {
+  mirror ([1,0,0]) { right_half(switch_holes, key_size, false); }
+}
+
+module extendZ() {
+  translate([0,0,-0.05]) scale([1,1,1.1])
+    for (i=[0:$children-1])
+    children(i);
 }
 
 module bottom_plate() {
   /* bottom layer of the case */
   difference() {
     hull() { screw_holes(washer_radius); }
-    screw_holes(screw_hole_radius);
+    //screw_holes_hull(washer_radius);
+    extendZ() screw_holes(screw_hole_radius);
   }
 }
 
@@ -337,17 +424,21 @@ module spacer() {
       difference() {
         bottom_plate();
         hull() {
-          right_half(switch_holes=false, key_size=switch_hole_size + 3, fake_keys=true);
-          left_half(switch_holes=false, key_size=switch_hole_size + 3, fake_keys=true);
+          right_half(switch_holes=false, key_size=switch_hole_size + 3);
+          left_half(switch_holes=false, key_size=switch_hole_size + 3);
         }
+        
+        //hull() right_half(switch_holes=false, key_size=switch_hole_size + 3);
+        //hull() left_half(switch_holes=false, key_size=switch_hole_size + 3);
+        
     /* add the USB cable hole: */
-    translate([-0.5*cable_hole_width, 2*column_spacing,0]) {
+    translate([-0.5*cable_hole_width, 2*column_spacing,-1]) {
       cube([cable_hole_width, (2*n_rows) * column_spacing,50]);
     }
       }
       screw_holes(washer_radius);
     }
-    screw_holes(screw_hole_radius);
+    extendZ() screw_holes(screw_hole_radius);
   }
 }
 
