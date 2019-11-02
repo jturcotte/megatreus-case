@@ -133,10 +133,10 @@ module space_bar(position, size) {
   }
 }
 
-module outside_key(position, size) {
+module outside_key(position, size, hole_x_scale=1.5) {
   /* Create a hole for a 1x1.5 unit thumb key. */
   translate(position) {
-    scale([1.5, 1]) {
+    scale([hole_x_scale, 1]) {
       translate(-position) {
         regular_key(position, size);
       }
@@ -168,6 +168,14 @@ module full_space_bar (position, switch_holes, key_size=key_hole_size) {
   }
 }
 
+module full_outside_key (position, switch_holes, key_size=key_hole_size, hole_x_scale=1.5) {
+  if (switch_holes == true) {
+    switch_hole(position);
+  } else {
+    outside_key(position, key_size, hole_x_scale);
+  }
+}
+
 module column (bottom_position, switch_holes, key_size=key_hole_size, n_rows_adj=0) {
   /* Create a column of keys. */
   translate(bottom_position) {
@@ -180,13 +188,15 @@ module column (bottom_position, switch_holes, key_size=key_hole_size, n_rows_adj
 module outside_column (bottom_position, switch_holes, key_size=key_hole_size) {
   /* Create a column of keys. */
   translate(bottom_position) {
-    for (i = [0:(n_rows-1)]) {
-      if (switch_holes == true) {
-        switch_hole([0, i*column_spacing,-1]);
-      } else {
-        outside_key([0, i*column_spacing,-1], key_size);
-      }
+    // Bottom 1.25u
+    // FIXME: Screw will be much lower now, still need this?
+    // full_outside_key([0.125*row_spacing, 0*column_spacing,-1], switch_holes, key_size, 1.25);
+    // Middle 1.5u
+    for (i = [0:(n_rows-2)]) {
+      full_outside_key([0.25*row_spacing, i*column_spacing,-1], switch_holes, key_size);
     }
+    // Top 1u
+    full_outside_key([0, (n_rows-1)*column_spacing,-1], switch_holes, key_size, 1);
   }
 }
 
@@ -264,7 +274,7 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
           column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + column_spacing + staggering_offsets[j]], switch_holes, key_size, -1);
         }
         // Move the two missing keys a bit lower for easier thumb access
-        thumb_middle_staggering = staggering_offsets[0]+staggering_offsets[4]/2;
+        thumb_middle_staggering = staggering_offsets[0];//+staggering_offsets[4]/2;
         full_regular_key([x_offset + (2+n_thumb_keys)*row_spacing, y_offset + thumb_middle_staggering,-1], switch_holes, key_size);
         full_regular_key([x_offset + (3+n_thumb_keys)*row_spacing, y_offset + thumb_middle_staggering,-1], switch_holes, key_size);
         for (j=[4:(n_cols-2)]) {
@@ -274,7 +284,8 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
 
       // Outside column
       // FIXME: Need larger border
-      outside_column([x_offset + (n_cols-1+n_thumb_keys+0.25)*row_spacing, y_offset + staggering_offsets[n_cols - 1]], switch_holes, key_size);
+      // FIXME: Try 1u at top, 1.25u at bottom
+      outside_column([x_offset + (n_cols-1+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[n_cols - 1]], switch_holes, key_size);
     }
   }
 }
