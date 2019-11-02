@@ -312,7 +312,7 @@ module screw_hole(radius, offset_radius, position, direction) {
 
 module right_screw_holes(hole_radius) {
   /* coordinates of the back right screw hole before rotation... */
-  back_right = [(n_cols+n_thumb_keys+0.25)*row_spacing,
+  back_right = [(n_cols+n_thumb_keys+0.5)*row_spacing,
                staggering_offsets[n_cols-1] + n_rows * column_spacing];
   // front_right = [(n_cols+n_thumb_keys+0.25)*row_spacing, staggering_offsets[n_cols-1]];
 
@@ -330,17 +330,17 @@ module right_screw_holes(hole_radius) {
       //            [-nudge, nudge]);
       // Front center
       screw_hole(hole_radius, washer_radius,
-                 [row_spacing, 0],
-                 [-nudge, -nudge]);
+                 [0.5*row_spacing, 0],
+                 [0, 0]);
       // Front right
       screw_hole(hole_radius, washer_radius,
                   // FIXME: Proper maths
-                 [(n_cols+n_thumb_keys+0.25)*row_spacing, -1.2 * column_spacing],
+                 [(n_cols+n_thumb_keys+0.5)*row_spacing, -1.2 * column_spacing],
                  [nudge, -nudge]);
       // Back right
       screw_hole(hole_radius, washer_radius,
                  back_right,
-                 [nudge, nudge]);
+                 [nudge, 0]);
     }
   }
 
