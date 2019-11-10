@@ -55,7 +55,7 @@ cable_hole_width = 12;
 
 /* Vertical column staggering offsets. The first element should
    be zero. */
-staggering_offsets = [0, 0, 9, 7, 2, 2];
+staggering_offsets = [0, 3, 12, 5.5, -1, -1];
 
 /* Whether or not to split the spacer into quarters. */
 quarter_spacer = false;
@@ -125,6 +125,7 @@ module thumb_key(position, size) {
 module space_bar(position, size) {
   /* Create a hole for a 2x1 unit key. */
   translate(position) {
+    // FIXME: We shouldn't scale the extra 1mm around the key as well.
     scale([2, 1]) {
       translate(-position) {
         regular_key(position, size);
@@ -228,7 +229,8 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
      spacer(). */
   x_offset = 0.5 * row_spacing;
   y_offset = 0.5 * column_spacing;
-  thumb_key_offset = y_offset + 1.25 * column_spacing;
+  // FIXME: For some reason, also leaves a 0.5mm gap
+  thumb_key_offset = y_offset + 1.25 * column_spacing + staggering_offsets[0];
   arrow_key_offset = y_offset;
 
   // Up arrow
@@ -249,9 +251,11 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
       }
 
       // Normal keys
+      thum_keys_y = staggering_offsets[3] - 0.5*column_spacing;//+staggering_offsets[4]/2;
+      // FIXME: Move outsidecolumn here
       if (really_right_half) {
         // Space bar hole
-        full_space_bar([x_offset + (0.5+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[0],-1], switch_holes, key_size);
+        full_space_bar([x_offset + (0.5+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
         // Up arrow
         full_regular_key([x_offset + (3+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[3],-1], switch_holes, key_size);
         // Down arrow
@@ -266,20 +270,22 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
           column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + column_spacing + staggering_offsets[j]], switch_holes, key_size, -1);
         }
       } else {
-        for (j=[0:1]) {
-          column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[j]], switch_holes, key_size);
-        }
+        // for (j=[0:1]) {
+        //   column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + thum_keys_y], switch_holes, key_size);
+        // }
         // One less key, and offset up by one key.
-        for (j=[2:3]) {
+        for (j=[0:4]) {
           column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + column_spacing + staggering_offsets[j]], switch_holes, key_size, -1);
         }
         // Move the two missing keys a bit lower for easier thumb access
-        thumb_middle_staggering = staggering_offsets[0];//+staggering_offsets[4]/2;
-        full_regular_key([x_offset + (2+n_thumb_keys)*row_spacing, y_offset + thumb_middle_staggering,-1], switch_holes, key_size);
-        full_regular_key([x_offset + (3+n_thumb_keys)*row_spacing, y_offset + thumb_middle_staggering,-1], switch_holes, key_size);
-        for (j=[4:(n_cols-2)]) {
-          column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[j]], switch_holes, key_size);
-        }
+        full_regular_key([x_offset + (0+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
+        full_regular_key([x_offset + (1+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
+        full_regular_key([x_offset + (2+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
+        full_regular_key([x_offset + (3+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
+        full_regular_key([x_offset + (4+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
+        // for (j=[5:(n_cols-2)]) {
+        //   column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[j]], switch_holes, key_size);
+        // }
       }
 
       // Outside column
@@ -313,12 +319,18 @@ module screw_hole(radius, offset_radius, position, direction) {
 module right_screw_holes(hole_radius) {
   /* coordinates of the back right screw hole before rotation... */
   back_right = [(n_cols+n_thumb_keys+0.5)*row_spacing,
-               staggering_offsets[n_cols-1] + n_rows * column_spacing];
+               staggering_offsets[n_cols-1] + (n_rows+0.25) * column_spacing];
   // front_right = [(n_cols+n_thumb_keys+0.25)*row_spacing, staggering_offsets[n_cols-1]];
 
   /* and after */
-  tmp = rz_fun(back_right, angle, [0, 2.25*column_spacing]);
+  tmp = rz_fun(back_right, angle, [0, 1.75*column_spacing]);
   // tmp_front = rz_fun(front_right, angle, [0, 2.25*column_spacing]);
+
+  // translate([0, 1.75*column_spacing])
+  //     cube([5, 5,5]);
+  // add_hand_separation()
+  //   translate(tmp)
+  //     cube([5, 5,5]);
 
   nudge = 0.75;
 
@@ -361,18 +373,19 @@ module right_screw_holes(hole_radius) {
   // }
 
   /* add the screw hole near the cable hole */
-  // translate([washer_radius - tmp[0],
+  translate([washer_radius - tmp[0],
   // translate([washer_radius - back_right.x,
-  //            back_screw_hole_offset]) {
-  //   rotate_half() {
-  //     add_hand_separation() {
-  //       screw_hole(hole_radius,
-  //                  washer_radius,
-  //                  back_right,
-  //                  [nudge, nudge]);
-  //     }
-  //   }
-  // }
+             back_screw_hole_offset]) {
+    rotate_half() {
+      add_hand_separation() {
+        screw_hole(hole_radius, washer_radius,
+          // FIXME: Move zero at the middle of the thumb key maybe instead?
+          // Or just take back_right and translate by the divide x by 2...
+                   back_right,
+                   [nudge, 0]);
+      }
+    }
+  }
 }
 
 module screw_holes_hull(hole_radius) {
@@ -401,19 +414,19 @@ module extendZ() {
     children(i);
 }
 
-module bottom_plate() {
+module bottom_plate(washer_radius_ratio=1.0) {
   /* bottom layer of the case */
   difference() {
-    hull() { screw_holes(washer_radius); }
+    hull() { screw_holes(washer_radius*washer_radius_ratio); }
     //screw_holes_hull(washer_radius);
     extendZ() screw_holes(screw_hole_radius);
   }
 }
 
-module top_plate() {
+module top_plate(washer_radius_ratio=1.0) {
   /* top layer of the case */
   difference() {
-    bottom_plate();
+    bottom_plate(washer_radius_ratio);
     right_half(false);
     left_half(false);
   }
@@ -474,6 +487,8 @@ module quartered_spacer()
 
 /* Create all four layers. */
 
+// FIXME: Should rather be a ratio relative to 3mm, maybe also make a constant?
+translate([0,0,12]) top_plate(2/3);
 translate([0,0,9]) top_plate();
 // projection(cut = false) 
   color("lightblue") translate([0, 0, 6]) { switch_plate(); }
