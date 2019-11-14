@@ -113,36 +113,28 @@ module keycap_hole(position, size, ratio = [1, 1]) {
   }
 }
 
-module regular_key (position, switch_holes, key_size=key_hole_size) {
+module key(position, switch_holes, key_size=key_hole_size, ratio = [1, 1]) {
   if (switch_holes == true) {
     switch_hole(position);
   } else {
-    keycap_hole(position, key_size);
+    keycap_hole(position, key_size, ratio);
   }
+}
+
+module regular_key (position, switch_holes, key_size=key_hole_size) {
+  key(position, switch_holes, key_size);
 }
 
 module thumb_key (position, switch_holes, key_size=key_hole_size) {
-  if (switch_holes == true) {
-    switch_hole(position);
-  } else {
-    keycap_hole(position, key_size, [1, 1.5]);
-  }
+  key(position, switch_holes, key_size, [1, 1.5]);
 }
 
 module space_bar (position, switch_holes, key_size=key_hole_size) {
-  if (switch_holes == true) {
-    switch_hole(position);
-  } else {
-    keycap_hole(position, key_size, [2, 1]);
-  }
+  key(position, switch_holes, key_size, [2, 1]);
 }
 
-module outside_key (position, switch_holes, key_size=key_hole_size, hole_x_scale=1.5) {
-  if (switch_holes == true) {
-    switch_hole(position);
-  } else {
-    keycap_hole(position, key_size, [hole_x_scale, 1]);
-  }
+module outside_key (position, switch_holes, key_size=key_hole_size) {
+  key(position, switch_holes, key_size, [1.5, 1]);
 }
 
 module column (bottom_position, switch_holes, key_size=key_hole_size, n_rows_adj=0) {
@@ -186,13 +178,9 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
   thumb_key_offset = y_offset + 1.25 * column_spacing + staggering_offsets[0];
   arrow_key_offset = y_offset;
 
-  // Up arrow
-  // regular_key([0, arrow_key_offset + column_spacing], switch_holes, key_size);
-
   rotate_half() {
     add_hand_separation() {
       // 2x 1.5u keys
-        // FIXME: Move to inside_column
       for (j=[0:1]) {
         thumb_key([x_offset, thumb_key_offset + j * 1.5 * column_spacing,-1], switch_holes, key_size);
       }
@@ -203,11 +191,10 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
         regular_key([x_offset, thumb_key_offset + j * 1 * column_spacing + 2.75 * column_spacing,-1], switch_holes, key_size);
       }
 
-      // Normal keys
       thum_keys_y = staggering_offsets[3] - 0.5*column_spacing;//+staggering_offsets[4]/2;
-      // FIXME: Move outsidecolumn here
+
       if (really_right_half) {
-        // Space bar hole
+        // Space bar
         space_bar([x_offset + (0.5+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
         // Up arrow
         regular_key([x_offset + (3+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[3],-1], switch_holes, key_size);
@@ -220,14 +207,13 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
         // AltGr/Fn
         regular_key([x_offset + (5+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[3] - 0.5*column_spacing,-1], switch_holes, key_size);
 
+        // Normal keys
         // One less key, and offset up by one key.
         for (j=[0:(n_cols-2)]) {
           column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + column_spacing + staggering_offsets[j]], switch_holes, key_size, -1);
         }
       } else {
-        // for (j=[0:1]) {
-        //   column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + thum_keys_y], switch_holes, key_size);
-        // }
+        // Normal keys
         // One less key, and offset up by one key.
         for (j=[0:4]) {
           column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + column_spacing + staggering_offsets[j]], switch_holes, key_size, -1);
@@ -235,16 +221,12 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
         // Move the left out keys a bit lower for easier thumb access
         regular_key([x_offset + (0+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
         regular_key([x_offset + (1+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
-        regular_key([x_offset + (2+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
-        regular_key([x_offset + (3+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
-        regular_key([x_offset + (4+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
-        // for (j=[5:(n_cols-2)]) {
-        //   column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[j]], switch_holes, key_size);
-        // }
+        // 1.25u and 1.75u keys in the middle
+        key([x_offset + (2+n_thumb_keys+0.125)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size, [1.25, 1]);
+        key([x_offset + (4+n_thumb_keys-0.375)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size, [1.75, 1]);
 
         // Outside column
         // Bottom 1.5u
-        // outside_key([0.125*row_spacing, 0*column_spacing,-1], switch_holes, key_size, 1.25);
         outside_key([
             x_offset + 0.25*row_spacing + (n_cols-1+n_thumb_keys)*row_spacing,
             y_offset + thum_keys_y,-1
@@ -260,10 +242,10 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
           ], switch_holes, key_size);
       }
       // Top 1u
-      outside_key([
+      regular_key([
           x_offset + (n_cols-1+n_thumb_keys)*row_spacing,
           y_offset + staggering_offsets[n_cols - 1] + (n_rows-1)*column_spacing,-1
-        ], switch_holes, key_size, 1);
+        ], switch_holes, key_size);
     }
   }
 }
