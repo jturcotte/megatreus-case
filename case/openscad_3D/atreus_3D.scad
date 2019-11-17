@@ -55,7 +55,7 @@ cable_hole_width = 12;
 
 /* Vertical column staggering offsets. The first element should
    be zero. */
-staggering_offsets = [0, 3, 12, 5.5, -1, -1];
+staggering_offsets = [0, 4, 9, 5, -4, -4];
 
 /* Whether or not to split the spacer into quarters. */
 quarter_spacer = false;
@@ -150,7 +150,6 @@ module rotate_half() {
   /* Rotate the right half of the keys around the top left corner of
      the thumb key. Assumes that the thumb key is a 1x1.5 key and that
      it is shifted 0.5*column_spacing up relative to the nearest column. */
-  // FIXME: Rotate on top of top key
   rotation_y_offset = 1.75 * column_spacing;
   for (i=[0:$children-1]) {
     rz(angle, [hand_separation, rotation_y_offset]) {
@@ -174,7 +173,6 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
      spacer(). */
   x_offset = 0.5 * row_spacing;
   y_offset = 0.5 * column_spacing;
-  // FIXME: For some reason, also leaves a 0.5mm gap
   thumb_key_offset = y_offset + 1.25 * column_spacing + staggering_offsets[0];
   arrow_key_offset = y_offset;
 
@@ -185,8 +183,6 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
         thumb_key([x_offset, thumb_key_offset + j * 1.5 * column_spacing,-1], switch_holes, key_size);
       }
       // 1u keys above for the inside
-      // FIXME: Add param for num x and y thumb keys
-      // column([x_offset, thumb_key_offset + 2 * 1.5 * column_spacing], switch_holes, key_size);
       for (j=[0:0]) {
         regular_key([x_offset, thumb_key_offset + j * 1 * column_spacing + 2.75 * column_spacing,-1], switch_holes, key_size);
       }
@@ -272,8 +268,8 @@ module screw_hole(radius, offset_radius, position, direction) {
 
 module right_screw_holes(hole_radius) {
   /* coordinates of the back right screw hole before rotation... */
-  back_right = [(n_cols+n_thumb_keys+0.5)*row_spacing,
-               staggering_offsets[n_cols-1] + (n_rows+0.25) * column_spacing];
+  back_right = [(n_cols+n_thumb_keys+0.4)*row_spacing,
+               staggering_offsets[n_cols-1] + (n_rows+0.5) * column_spacing];
   // front_right = [(n_cols+n_thumb_keys+0.25)*row_spacing, staggering_offsets[n_cols-1]];
 
   /* and after */
@@ -301,7 +297,7 @@ module right_screw_holes(hole_radius) {
       // Front right
       screw_hole(hole_radius, washer_radius,
                   // FIXME: Proper maths
-                 [(n_cols+n_thumb_keys+0.5)*row_spacing, -1.2 * column_spacing],
+                 [(n_cols+n_thumb_keys+0.4)*row_spacing, -1.333 * column_spacing],
                  [nudge, -nudge]);
       // Back right
       screw_hole(hole_radius, washer_radius,
@@ -369,6 +365,7 @@ module extendZ() {
 }
 
 module bottom_plate(washer_radius_ratio=1.0) {
+  color("Gainsboro")
   /* bottom layer of the case */
   difference() {
     hull() { screw_holes(washer_radius*washer_radius_ratio); }
@@ -445,7 +442,7 @@ module quartered_spacer()
 translate([0,0,12]) top_plate(2/3);
 translate([0,0,9]) top_plate();
 // projection(cut = false) 
-  color("lightblue") translate([0, 0, 6]) { switch_plate(); }
+  color("DimGray") translate([0, 0, 6]) { switch_plate(); }
 translate([350, 0,0]) { bottom_plate(); }
 translate([0,0,3]) spacer();
 translate([0, 0,0]) {
