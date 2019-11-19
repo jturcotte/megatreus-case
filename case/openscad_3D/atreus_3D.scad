@@ -31,7 +31,7 @@ washer_radius     = 4 * screw_hole_radius;
 back_screw_hole_offset = 0;
 
 /* Distance between halves. */
-hand_separation        = 25;
+hand_separation        = 22.5;
 
 /* The approximate size of switch holes. Used to determine how
    thick walls can be, i.e. how much room around each switch hole to
@@ -267,42 +267,59 @@ module screw_hole(radius, offset_radius, position, direction) {
 }
 
 module right_screw_holes(hole_radius) {
+  right_x = (n_cols+n_thumb_keys+0.5)*row_spacing;
   /* coordinates of the back right screw hole before rotation... */
-  back_right = [(n_cols+n_thumb_keys+0.4)*row_spacing,
+  back_right = [right_x,
                staggering_offsets[n_cols-1] + (n_rows+0.5) * column_spacing];
   // front_right = [(n_cols+n_thumb_keys+0.25)*row_spacing, staggering_offsets[n_cols-1]];
+  front_center = [0.5*row_spacing, -0.25 * column_spacing];
 
   /* and after */
   tmp = rz_fun(back_right, angle, [0, 1.75*column_spacing]);
-  // tmp_front = rz_fun(front_right, angle, [0, 2.25*column_spacing]);
+  tmp_front = rz_fun(front_center, angle, [0, 1.75*column_spacing]);
 
   // translate([0, 1.75*column_spacing])
   //     cube([5, 5,5]);
   // add_hand_separation()
-  //   translate(tmp)
-  //     cube([5, 5,5]);
+  //   translate([tmp_front[0], 0])
+  //     screw_hole(hole_radius, washer_radius,
+  //            [0, 0],
+  //            [0, 0]);
 
-  nudge = 0.75;
+  rotate_half() {
+    add_hand_separation() {
+      // tmp_yo = rz_fun(front_right, -angle, front_center);
+
+
+      x = right_x;
+      y = front_center[1] + x * tan(-angle);
+      screw_hole(hole_radius, washer_radius,
+             [x, y],
+             [0, -0]);
+      // cube(concat(tmp_yo, 12), center=true);
+    }
+}
+  // 0 = 0.75;
 
   rotate_half() {
     add_hand_separation() {
       // Back center
       // screw_hole(hole_radius, washer_radius,
       //            [row_spacing*0.75, staggering_offsets[n_cols-1] + (n_rows) * column_spacing],
-      //            [-nudge, nudge]);
+      //            [-0, 0]);
       // Front center
       screw_hole(hole_radius, washer_radius,
-                 [0.5*row_spacing, 0],
-                 [0, 0]);
+                 front_center,
+                 [0, -0]);
       // Front right
-      screw_hole(hole_radius, washer_radius,
-                  // FIXME: Proper maths
-                 [(n_cols+n_thumb_keys+0.4)*row_spacing, -1.333 * column_spacing],
-                 [nudge, -nudge]);
+      // screw_hole(hole_radius, washer_radius,
+      //             // FIXME: Proper maths
+      //            front_right,
+      //            [0, -0]);
       // Back right
       screw_hole(hole_radius, washer_radius,
                  back_right,
-                 [nudge, 0]);
+                 [0, 0]);
     }
   }
 
@@ -322,6 +339,20 @@ module right_screw_holes(hole_radius) {
   //   }
   // }
 
+  // translate([ - tmp_front[0],
+  // // translate([washer_radius - back_right.x,
+  //            0]) {
+  //   rotate_half() {
+  //     add_hand_separation() {
+  //       screw_hole(hole_radius, washer_radius,
+  //         // FIXME: Move zero at the middle of the thumb key maybe instead?
+  //         // Or just take back_right and translate by the divide x by 2...
+  //                  front_right,
+  //                  [nudge, 0]);
+  //     }
+  //   }
+  // }
+
   /* add the screw hole near the cable hole */
   translate([washer_radius - tmp[0],
   // translate([washer_radius - back_right.x,
@@ -332,7 +363,7 @@ module right_screw_holes(hole_radius) {
           // FIXME: Move zero at the middle of the thumb key maybe instead?
           // Or just take back_right and translate by the divide x by 2...
                    back_right,
-                   [nudge, 0]);
+                   [0, 0]);
       }
     }
   }
