@@ -286,17 +286,19 @@ module right_screw_holes(hole_radius) {
   //            [0, 0],
   //            [0, 0]);
 
+  // Front right hole calculated according to front_center
   rotate_half() {
     add_hand_separation() {
       // tmp_yo = rz_fun(front_right, -angle, front_center);
 
 
+      // FIXME: Put this madness into a function
       x = right_x;
-      y = front_center[1] + x * tan(-angle);
+      y = front_center[1] + (x - front_center[0]) * tan(-angle);
       screw_hole(hole_radius, washer_radius,
              [x, y],
              [0, -0]);
-      // cube(concat(tmp_yo, 12), center=true);
+//      cube(concat([x, y], 12), center=true);
     }
 }
   // 0 = 0.75;
