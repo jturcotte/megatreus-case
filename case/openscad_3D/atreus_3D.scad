@@ -25,11 +25,6 @@ screw_hole_radius = 1.5;
    `switch_hole_size` determine the spacer wall thickness. */
 washer_radius     = 4 * screw_hole_radius;
 
-/* This constant allows tweaking the location of the screw holes near
-   the USB cable. Only useful with small `angle` values. Try the value
-   of 10 with angle=0. */
-back_screw_hole_offset = 0;
-
 /* Distance between halves. */
 hand_separation        = 22.5;
 
@@ -74,12 +69,6 @@ module rz(angle, center=undef) {
     }
   }
 }
-
-/* Compute coordinates of a point obtained by rotating p angle degrees
-   around center. Used to compute locations of screw holes near the
-   USB cable hole. */
-function rz_fun(p, angle, center) = [cos(angle) * (p[0] - center[0]) - sin(angle) * (p[1] - center[1]) + center[0],
-                                     sin(angle) * (p[0] - center[0]) + cos(angle) * (p[1] - center[1])+ center[1]];
 
 module switch_hole(position, notches=use_notched_holes) {
   /* Cherry MX switch hole with the center at `position`. Sizes come
@@ -266,109 +255,39 @@ module screw_hole(radius, offset_radius, position, direction) {
   }
 }
 
+function unrotate_align_right(ref_point, new_x) =
+  [new_x, ref_point[1] + (new_x - ref_point[0]) * tan(-angle)];
+
+function unrotate_align_left(ref_point, new_x) =
+  [new_x, ref_point[1] - (new_x - ref_point[0]) * tan(angle)];
+
 module right_screw_holes(hole_radius) {
   right_x = (n_cols+n_thumb_keys+0.5)*row_spacing;
-  /* coordinates of the back right screw hole before rotation... */
+  back_center_x = (n_thumb_keys)*row_spacing;
   back_right = [right_x,
                staggering_offsets[n_cols-1] + (n_rows+0.5) * column_spacing];
-  // front_right = [(n_cols+n_thumb_keys+0.25)*row_spacing, staggering_offsets[n_cols-1]];
   front_center = [0.5*row_spacing, -0.25 * column_spacing];
 
-  /* and after */
-  tmp = rz_fun(back_right, angle, [0, 1.75*column_spacing]);
-  tmp_front = rz_fun(front_center, angle, [0, 1.75*column_spacing]);
-
-  // translate([0, 1.75*column_spacing])
-  //     cube([5, 5,5]);
-  // add_hand_separation()
-  //   translate([tmp_front[0], 0])
-  //     screw_hole(hole_radius, washer_radius,
-  //            [0, 0],
-  //            [0, 0]);
-
-  // Front right hole calculated according to front_center
   rotate_half() {
     add_hand_separation() {
-      // tmp_yo = rz_fun(front_right, -angle, front_center);
-
-
-      // FIXME: Put this madness into a function
-      x = right_x;
-      y = front_center[1] + (x - front_center[0]) * tan(-angle);
-      screw_hole(hole_radius, washer_radius,
-             [x, y],
-             [0, -0]);
-//      cube(concat([x, y], 12), center=true);
-    }
-}
-  // 0 = 0.75;
-
-  rotate_half() {
-    add_hand_separation() {
-      // Back center
-      // screw_hole(hole_radius, washer_radius,
-      //            [row_spacing*0.75, staggering_offsets[n_cols-1] + (n_rows) * column_spacing],
-      //            [-0, 0]);
       // Front center
       screw_hole(hole_radius, washer_radius,
                  front_center,
                  [0, -0]);
-      // Front right
-      // screw_hole(hole_radius, washer_radius,
-      //             // FIXME: Proper maths
-      //            front_right,
-      //            [0, -0]);
       // Back right
       screw_hole(hole_radius, washer_radius,
                  back_right,
                  [0, 0]);
+
+      // Front right and back center holes, calculated according to front_center and back_right.
+      screw_hole(hole_radius, washer_radius,
+             unrotate_align_right(front_center, right_x),
+             [0, -0]);
+      screw_hole(hole_radius, washer_radius,
+             unrotate_align_left(back_right, back_center_x),
+             [0, -0]);
     }
-  }
-
-  // translate([washer_radius - tmp[0],
-
-  // Opposite front left
-  // mirror ([1,0,0]) {
-  //   rotate_half() {
-  //     add_hand_separation() {
-  //     screw_hole(hole_radius, washer_radius,
-  //                [row_spacing*0.75, staggering_offsets[n_cols-1] + (n_rows) * column_spacing],
-  //                [-nudge, nudge]);
-  //     screw_hole(hole_radius, washer_radius,
-  //                [row_spacing, 0],
-  //                [-nudge, -nudge]);
-  //     }
-  //   }
-  // }
-
-  // translate([ - tmp_front[0],
-  // // translate([washer_radius - back_right.x,
-  //            0]) {
-  //   rotate_half() {
-  //     add_hand_separation() {
-  //       screw_hole(hole_radius, washer_radius,
-  //         // FIXME: Move zero at the middle of the thumb key maybe instead?
-  //         // Or just take back_right and translate by the divide x by 2...
-  //                  front_right,
-  //                  [nudge, 0]);
-  //     }
-  //   }
-  // }
-
-  /* add the screw hole near the cable hole */
-  translate([washer_radius - tmp[0],
-  // translate([washer_radius - back_right.x,
-             back_screw_hole_offset]) {
-    rotate_half() {
-      add_hand_separation() {
-        screw_hole(hole_radius, washer_radius,
-          // FIXME: Move zero at the middle of the thumb key maybe instead?
-          // Or just take back_right and translate by the divide x by 2...
-                   back_right,
-                   [0, 0]);
-      }
-    }
-  }
+  }  
 }
 
 module screw_holes_hull(hole_radius) {
@@ -436,13 +355,10 @@ module spacer() {
           left_half(switch_holes=false, key_size=switch_hole_size + 3);
         }
         
-        //hull() right_half(switch_holes=false, key_size=switch_hole_size + 3);
-        //hull() left_half(switch_holes=false, key_size=switch_hole_size + 3);
-        
-    /* add the USB cable hole: */
-    translate([-0.5*cable_hole_width, 2*column_spacing,-1]) {
-      cube([cable_hole_width, (2*n_rows) * column_spacing,50]);
-    }
+        /* add the USB cable hole: */
+        translate([-0.5*cable_hole_width, 2*column_spacing,-1]) {
+          cube([cable_hole_width, (2*n_rows) * column_spacing,50]);
+        }
       }
       screw_holes(washer_radius);
     }
