@@ -316,20 +316,20 @@ module extendZ() {
     children(i);
 }
 
-module bottom_plate(washer_radius_ratio=1.0) {
+module bottom_plate(edge_gap=0.0) {
   color("Gainsboro")
   /* bottom layer of the case */
   difference() {
-    hull() { screw_holes(washer_radius*washer_radius_ratio); }
+    hull() { screw_holes(washer_radius - edge_gap); }
     //screw_holes_hull(washer_radius);
     extendZ() screw_holes(screw_hole_radius);
   }
 }
 
-module top_plate(washer_radius_ratio=1.0) {
+module top_plate(edge_gap=0.0) {
   /* top layer of the case */
   difference() {
-    bottom_plate(washer_radius_ratio);
+    bottom_plate(edge_gap);
     right_half(false);
     left_half(false);
   }
@@ -386,9 +386,8 @@ module quartered_spacer()
 }
 
 /* Create all four layers. */
-
-// FIXME: Should rather be a ratio relative to 3mm, maybe also make a constant?
-translate([0,0,12]) top_plate(2/3);
+// Use an edge gap of half the plate's height.
+translate([0,0,12]) top_plate(1.5);
 translate([0,0,9]) top_plate();
 // projection(cut = false) 
   color("DimGray") translate([0, 0, 6]) { switch_plate(); }
