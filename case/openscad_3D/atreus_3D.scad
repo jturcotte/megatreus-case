@@ -235,22 +235,9 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
   }
 }
 
-module screw_hole(radius, offset_radius, position, direction) {
-  /* Create a screw hole of radius `radius` at a location
-     `offset_radius` from `position`, (diagonally), in the direction
-     `direction`. Oh, what a mess this is. */
-  /* direction is the 2-element vector specifying to which side of
-     position to move to, [-1, -1] for bottom left, etc. */
-
-  /* radius_offset is the offset in the x (or y) direction so that
-     we're offset_radius from position */
-  radius_offset = offset_radius / sqrt(2);
-  /* key_hole_offset if the difference between key spacing and key
-     hole edge */
-  key_hole_offset = 0.5*(row_spacing - key_hole_size);
-  x = position[0] + (radius_offset - key_hole_offset) * direction[0];
-  y = position[1] + (radius_offset - key_hole_offset) * direction[1];
-  translate([x,y,0]) {
+module screw_hole(radius, position) {
+  /* Create a screw hole of radius `radius` at a location `position`. */
+  translate(position) {
     cylinder(r1=radius,r2=radius,h=3);
   }
 }
@@ -263,7 +250,7 @@ function unrotate_align_left(ref_point, new_x) =
 
 module right_screw_holes(hole_radius) {
   right_x = (n_cols+n_thumb_keys+0.5)*row_spacing;
-  back_center_x = (n_thumb_keys)*row_spacing;
+  back_center_x = (n_thumb_keys+0.5)*row_spacing;
   back_right = [right_x,
                staggering_offsets[n_cols-1] + (n_rows+0.5) * column_spacing];
   front_center = [0.5*row_spacing, -0.25 * column_spacing];
@@ -271,21 +258,14 @@ module right_screw_holes(hole_radius) {
   rotate_half() {
     add_hand_separation() {
       // Front center
-      screw_hole(hole_radius, washer_radius,
-                 front_center,
-                 [0, -0]);
+      screw_hole(hole_radius, front_center);
       // Back right
-      screw_hole(hole_radius, washer_radius,
-                 back_right,
-                 [0, 0]);
+      screw_hole(hole_radius, back_right);
 
-      // Front right and back center holes, calculated according to front_center and back_right.
-      screw_hole(hole_radius, washer_radius,
-             unrotate_align_right(front_center, right_x),
-             [0, -0]);
-      screw_hole(hole_radius, washer_radius,
-             unrotate_align_left(back_right, back_center_x),
-             [0, -0]);
+      // Front right
+      screw_hole(hole_radius, unrotate_align_right(front_center, right_x));
+      // Back center
+      screw_hole(hole_radius, unrotate_align_left(back_right, back_center_x));
     }
   }  
 }
