@@ -252,7 +252,7 @@ module right_screw_holes(hole_radius) {
   right_x = (n_cols+n_thumb_keys+0.5)*row_spacing;
   back_center_x = (n_thumb_keys+0.5)*row_spacing;
   back_right = [right_x,
-               staggering_offsets[n_cols-1] + (n_rows+0.5) * column_spacing];
+               staggering_offsets[n_cols-1] + (n_rows+0.55) * column_spacing];
   front_center = [0.5*row_spacing, -0.25 * column_spacing];
 
   rotate_half() {
