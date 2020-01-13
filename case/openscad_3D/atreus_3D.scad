@@ -17,16 +17,17 @@ key_hole_size = 20;
    number */
 angle = 10;
 
+top_most_plate_bezel = 1.5;
 /* The radius of screw holes. Holes will be slightly bigger due
    to the cut width. */
-screw_hole_radius = 1.5;
+screw_hole_radius = 2.5;
 /* Each screw hole is a hole in a "washer". How big these "washers"
    should be depends on the material used: this parameter and the
    `switch_hole_size` determine the spacer wall thickness. */
-washer_radius     = 4 * screw_hole_radius;
+washer_radius     = 5 + top_most_plate_bezel + 1;
 
 /* Distance between halves. */
-hand_separation        = 22.5;
+hand_separation        = 23;
 
 /* The approximate size of switch holes. Used to determine how
    thick walls can be, i.e. how much room around each switch hole to
@@ -51,6 +52,7 @@ cable_hole_width = 12;
 /* Vertical column staggering offsets. The first element should
    be zero. */
 staggering_offsets = [0, 4, 9, 5, -4, -4];
+thumb_keys_y = staggering_offsets[3] - 0.5*column_spacing;
 
 /* Whether or not to split the spacer into quarters. */
 quarter_spacer = false;
@@ -176,11 +178,10 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
         regular_key([x_offset, thumb_key_offset + j * 1 * column_spacing + 2.75 * column_spacing,-1], switch_holes, key_size);
       }
 
-      thum_keys_y = staggering_offsets[3] - 0.5*column_spacing;//+staggering_offsets[4]/2;
 
       if (really_right_half) {
         // Space bar
-        space_bar([x_offset + (0.5+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
+        space_bar([x_offset + (0.5+n_thumb_keys)*row_spacing, y_offset + thumb_keys_y,-1], switch_holes, key_size);
         // Up arrow
         regular_key([x_offset + (3+n_thumb_keys)*row_spacing, y_offset + staggering_offsets[3],-1], switch_holes, key_size);
         // Down arrow
@@ -204,17 +205,17 @@ module right_half (switch_holes=true, key_size=key_hole_size, really_right_half=
           column([x_offset + (j+n_thumb_keys)*row_spacing, y_offset + column_spacing + staggering_offsets[j]], switch_holes, key_size, -1);
         }
         // Move the left out keys a bit lower for easier thumb access
-        regular_key([x_offset + (0+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
-        regular_key([x_offset + (1+n_thumb_keys)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size);
+        regular_key([x_offset + (0+n_thumb_keys)*row_spacing, y_offset + thumb_keys_y,-1], switch_holes, key_size);
+        regular_key([x_offset + (1+n_thumb_keys)*row_spacing, y_offset + thumb_keys_y,-1], switch_holes, key_size);
         // 1.25u and 1.75u keys in the middle
-        key([x_offset + (2+n_thumb_keys+0.125)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size, [1.25, 1]);
-        key([x_offset + (4+n_thumb_keys-0.375)*row_spacing, y_offset + thum_keys_y,-1], switch_holes, key_size, [1.75, 1]);
+        key([x_offset + (2+n_thumb_keys+0.125)*row_spacing, y_offset + thumb_keys_y,-1], switch_holes, key_size, [1.25, 1]);
+        key([x_offset + (4+n_thumb_keys-0.375)*row_spacing, y_offset + thumb_keys_y,-1], switch_holes, key_size, [1.75, 1]);
 
         // Outside column
         // Bottom 1.5u
         outside_key([
             x_offset + 0.25*row_spacing + (n_cols-1+n_thumb_keys)*row_spacing,
-            y_offset + thum_keys_y,-1
+            y_offset + thumb_keys_y,-1
           ], switch_holes, key_size);
       }
 
@@ -249,11 +250,13 @@ function unrotate_align_left(ref_point, new_x) =
   [new_x, ref_point[1] - (new_x - ref_point[0]) * tan(angle)];
 
 module right_screw_holes(hole_radius) {
-  right_x = (n_cols+n_thumb_keys+0.5)*row_spacing;
-  back_center_x = (n_thumb_keys+0.5)*row_spacing;
+  // Align the middle of some holes with the case's edge
+  key_hole_gap_with_cap = (key_hole_size-row_spacing)/2.0;
+  right_x = (n_cols+n_thumb_keys+0.5)*row_spacing + key_hole_gap_with_cap;
+  back_center_x = (n_thumb_keys+1.5)*row_spacing;
   back_right = [right_x,
                staggering_offsets[n_cols-1] + (n_rows+0.55) * column_spacing];
-  front_center = [0.5*row_spacing, -0.25 * column_spacing];
+  front_center = [0.5*row_spacing, thumb_keys_y + 1];
 
   rotate_half() {
     add_hand_separation() {
@@ -313,6 +316,7 @@ module top_plate(edge_gap=0.0) {
     right_half(false);
     left_half(false);
   }
+  translate([0.0, 0.0, 0.5]) color("white") screw_holes(5);
 }
 
 module switch_plate() {
@@ -367,7 +371,7 @@ module quartered_spacer()
 
 /* Create all four layers. */
 // Use an edge gap of half the plate's height.
-translate([0,0,12]) top_plate(1.5);
+translate([0,0,12]) top_plate(top_most_plate_bezel);
 translate([0,0,9]) top_plate();
 // projection(cut = false) 
   color("DimGray") translate([0, 0, 6]) { switch_plate(); }
