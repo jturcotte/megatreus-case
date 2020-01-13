@@ -58,7 +58,7 @@ thumb_keys_y = staggering_offsets[3] - 0.5*column_spacing;
 quarter_spacer = false;
 
 /* Where the top/bottom split of a quartered spacer will be. */
-spacer_quartering_offset = 60;
+cable_hole_offset = 120;
 
 module rz(angle, center=undef) {
   /* Rotate children `angle` degrees around `center`. */
@@ -338,6 +338,7 @@ module spacer() {
           right_half(switch_holes=false, key_size=switch_hole_size + 3);
           left_half(switch_holes=false, key_size=switch_hole_size + 3);
 
+          // Leave some extra space for the micro-controller at the top.
           rotate_half() add_hand_separation()
             keycap_hole([1.5*row_spacing, 5.75*column_spacing]);
           mirror ([1,0,0]) rotate_half() add_hand_separation()
@@ -346,7 +347,7 @@ module spacer() {
         }
 
         /* add the USB cable hole: */
-        translate([100, 2*column_spacing,-1]) {
+        translate([cable_hole_offset - cable_hole_width, 2*column_spacing,-1]) {
           cube([cable_hole_width, (2*n_rows) * column_spacing,50]);
         }
       }
@@ -357,22 +358,19 @@ module spacer() {
 }
 
 module spacer_quadrant(spacer_quadrant_number) {
-  /* Cut a quarter of a spacer. */
-  translate([0, spacer_quartering_offset]) {
-    intersection() {
-      translate([0, -spacer_quartering_offset]) { spacer(); }
-      rotate([0, 0, spacer_quadrant_number * 90]) { cube([1000, 1000,3]); }
-    }
+  /* Cut a spacer. */
+  intersection() {
+    spacer();
+    translate([-cable_hole_offset + spacer_quadrant_number * 2 * cable_hole_offset, -500]) { cube([cable_hole_offset*2, 1000,3]); }
   }
 }
 
 module quartered_spacer()
 {
-  /* Assemble all four quarters of a spacer. */
+  /* Assemble all three parts of a spacer. */
+  translate([-10,0]) spacer_quadrant(-1);
   spacer_quadrant(0);
-  spacer_quadrant(1);
-  translate([-5,-10]) spacer_quadrant(2);
-  translate([5,-10]) spacer_quadrant(3);
+  translate([10,0]) spacer_quadrant(1);
 }
 
 /* Create all four layers. */
