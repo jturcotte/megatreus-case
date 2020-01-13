@@ -47,7 +47,7 @@ n_cols = 6;
 n_thumb_keys = 1;
 
 /* The width of the USB cable hole in the spacer. */
-cable_hole_width = 12;
+cable_hole_width = 21;
 
 /* Vertical column staggering offsets. The first element should
    be zero. */
@@ -95,7 +95,7 @@ module switch_hole(position, notches=use_notched_holes) {
   }
 };
 
-module keycap_hole(position, size, ratio = [1, 1]) {
+module keycap_hole(position, size=key_hole_size, ratio = [1, 1]) {
   /* Create a hole for a regular key. */
   translate(position) {
     w = size + column_spacing * (ratio[0] - 1);
@@ -337,10 +337,16 @@ module spacer() {
         hull() {
           right_half(switch_holes=false, key_size=switch_hole_size + 3);
           left_half(switch_holes=false, key_size=switch_hole_size + 3);
+
+          rotate_half() add_hand_separation()
+            keycap_hole([1.5*row_spacing, 5.75*column_spacing]);
+          mirror ([1,0,0]) rotate_half() add_hand_separation()
+            keycap_hole([1.5*row_spacing, 5.75*column_spacing]);
+
         }
-        
+
         /* add the USB cable hole: */
-        translate([-0.5*cable_hole_width, 2*column_spacing,-1]) {
+        translate([100, 2*column_spacing,-1]) {
           cube([cable_hole_width, (2*n_rows) * column_spacing,50]);
         }
       }
