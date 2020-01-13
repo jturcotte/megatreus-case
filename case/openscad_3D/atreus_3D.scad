@@ -249,43 +249,46 @@ function unrotate_align_right(ref_point, new_x) =
 function unrotate_align_left(ref_point, new_x) =
   [new_x, ref_point[1] - (new_x - ref_point[0]) * tan(angle)];
 
-module right_screw_holes(hole_radius) {
+module right_screw_holes(hole_radius, washer_connector) {
   // Align the middle of some holes with the case's edge
   key_hole_gap_with_cap = (key_hole_size-row_spacing)/2.0;
   right_x = (n_cols+n_thumb_keys+0.5)*row_spacing + key_hole_gap_with_cap;
   back_center_x = (n_thumb_keys+1.5)*row_spacing;
   back_right = [right_x,
                staggering_offsets[n_cols-1] + (n_rows+0.55) * column_spacing];
-  front_center = [0.5*row_spacing, thumb_keys_y + 1];
+  front_center = [0.5*row_spacing, thumb_keys_y + 0.5 * column_spacing];
+  front_right = [right_x, -1.4 * column_spacing];
 
   rotate_half() {
     add_hand_separation() {
       // Front center
       screw_hole(hole_radius, front_center);
+      if (washer_connector) {
+        hull() {
+          // Hard-code a bunch of factors that connect the washers with the spacer.
+          screw_hole(hole_radius, front_center);
+          screw_hole(hole_radius, front_center + [0.5*hole_radius, -1.5*hole_radius]);
+          screw_hole(hole_radius, front_center + [-hole_radius, -1.25*hole_radius]);
+        }
+      } else {
+        screw_hole(hole_radius, front_center);
+      }
       // Back right
       screw_hole(hole_radius, back_right);
 
       // Front right
-      screw_hole(hole_radius, unrotate_align_right(front_center, right_x));
+      screw_hole(hole_radius, front_right);
       // Back center
       screw_hole(hole_radius, unrotate_align_left(back_right, back_center_x));
     }
   }  
 }
 
-module screw_holes_hull(hole_radius) {
+module screw_holes(hole_radius, washer_connector) {
   /* Create all the screw holes. */
   union() {
-    hull() { right_screw_holes(hole_radius); }
-    hull() { mirror ([1,0,0]) { right_screw_holes(hole_radius); } }
-  }
-}
-
-module screw_holes(hole_radius) {
-  /* Create all the screw holes. */
-  union() {
-    right_screw_holes(hole_radius);
-    mirror ([1,0,0]) { right_screw_holes(hole_radius); }
+    right_screw_holes(hole_radius, washer_connector);
+    mirror ([1,0,0]) { right_screw_holes(hole_radius, washer_connector); }
   }
 }
 
@@ -304,7 +307,6 @@ module bottom_plate(edge_gap=0.0) {
   /* bottom layer of the case */
   difference() {
     hull() { screw_holes(washer_radius - edge_gap); }
-    //screw_holes_hull(washer_radius);
     extendZ() screw_holes(screw_hole_radius);
   }
 }
@@ -351,7 +353,7 @@ module spacer() {
           cube([cable_hole_width, (2*n_rows) * column_spacing,50]);
         }
       }
-      screw_holes(washer_radius);
+      screw_holes(washer_radius, washer_connector=true);
     }
     extendZ() screw_holes(screw_hole_radius);
   }
