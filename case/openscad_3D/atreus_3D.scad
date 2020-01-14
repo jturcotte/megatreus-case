@@ -55,7 +55,7 @@ staggering_offsets = [0, 4, 9, 5, -4, -4];
 thumb_keys_y = staggering_offsets[3] - 0.5*column_spacing;
 
 /* Whether or not to split the spacer into quarters. */
-quarter_spacer = false;
+quarter_spacer = true;
 
 /* Where the top/bottom split of a quartered spacer will be. */
 cable_hole_offset = 120;
@@ -302,7 +302,7 @@ module extendZ() {
     children(i);
 }
 
-module bottom_plate(edge_gap=0.0) {
+module base_plate(edge_gap=0.0) {
   color("Gainsboro")
   /* bottom layer of the case */
   difference() {
@@ -314,7 +314,7 @@ module bottom_plate(edge_gap=0.0) {
 module top_plate(edge_gap=0.0) {
   /* top layer of the case */
   difference() {
-    bottom_plate(edge_gap);
+    base_plate(edge_gap);
     right_half(false);
     left_half(false);
   }
@@ -324,7 +324,7 @@ module top_plate(edge_gap=0.0) {
 module switch_plate() {
   /* the switch plate */
   difference() {
-    bottom_plate();
+    base_plate();
     right_half();
     left_half();
   }
@@ -335,7 +335,7 @@ module spacer() {
   difference() {
     union() {
       difference() {
-        bottom_plate();
+        base_plate();
         hull() {
           right_half(switch_holes=false, key_size=switch_hole_size + 3);
           left_half(switch_holes=false, key_size=switch_hole_size + 3);
@@ -367,6 +367,18 @@ module spacer_quadrant(spacer_quadrant_number) {
   }
 }
 
+module bottom_quadrant(left) {
+  intersection() {
+    base_plate();
+    translate([0, -500]) {
+      if (left)
+        cube([1000, 1000,3]);
+      else
+        mirror([1,0,0]) cube([1000, 1000,3]);
+    }
+  }
+}
+
 module quartered_spacer()
 {
   /* Assemble all three parts of a spacer. */
@@ -375,15 +387,29 @@ module quartered_spacer()
   translate([10,0]) spacer_quadrant(1);
 }
 
+module quartered_bottom()
+{
+  /* Assemble all three parts of a spacer. */
+  translate([-10,0]) bottom_quadrant(false);
+  translate([10,0]) bottom_quadrant(true);
+}
+
 /* Create all four layers. */
 // Use an edge gap of half the plate's height.
 translate([0,0,12]) top_plate(top_most_plate_bezel);
 translate([0,0,9]) top_plate();
 // projection(cut = false) 
   color("DimGray") translate([0, 0, 6]) { switch_plate(); }
-translate([350, 0,0]) { bottom_plate(); }
+translate([370, 0,0]) {
+  if (quarter_spacer == true) {
+    quartered_bottom();
+  }
+  else {
+    base_plate();
+  }
+}
 translate([0,0,3]) spacer();
-translate([0, 0,0]) {
+translate([0,0,0]) {
   if (quarter_spacer == true) {
     quartered_spacer();
   }
