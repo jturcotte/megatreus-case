@@ -20,11 +20,11 @@ angle = 10;
 top_most_plate_bezel = 1.5;
 /* The radius of screw holes. Holes will be slightly bigger due
    to the cut width. */
-screw_hole_radius = 2.5;
+screw_hole_radius = 1.5;
 /* Each screw hole is a hole in a "washer". How big these "washers"
    should be depends on the material used: this parameter and the
    `switch_hole_size` determine the spacer wall thickness. */
-washer_radius     = 5 + top_most_plate_bezel + 1;
+washer_radius     = screw_hole_radius * 2 + top_most_plate_bezel + 1;
 
 /* Distance between halves. */
 hand_separation        = 23;
@@ -55,7 +55,7 @@ staggering_offsets = [0, 4, 9, 5, -4, -4];
 thumb_keys_y = staggering_offsets[3] - 0.5*column_spacing;
 
 /* Whether or not to split the spacer into quarters. */
-quarter_spacer = true;
+quarter_spacer = false;
 
 /* Where the top/bottom split of a quartered spacer will be. */
 cable_hole_offset = 120;
@@ -318,7 +318,7 @@ module top_plate(edge_gap=0.0) {
     right_half(false);
     left_half(false);
   }
-  translate([0.0, 0.0, 0.5]) color("white") screw_holes(5);
+  translate([0.0, 0.0, 0.5]) color("white") screw_holes(3);
 }
 
 module switch_plate() {
