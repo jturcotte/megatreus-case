@@ -318,7 +318,7 @@ module top_plate(edge_gap=0.0) {
     right_half(false);
     left_half(false);
   }
-  translate([0.0, 0.0, 0.5]) color("white") screw_holes(3);
+  // translate([0.0, 0.0, 0.5]) color("white") screw_holes(3);
 }
 
 module switch_plate() {
