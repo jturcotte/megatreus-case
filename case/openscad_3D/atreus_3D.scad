@@ -58,7 +58,7 @@ thumb_keys_y = staggering_offsets[3] - 0.5*column_spacing;
 quarter_spacer = false;
 
 /* Where the top/bottom split of a quartered spacer will be. */
-cable_hole_offset = 120;
+cable_hole_offset = -120;
 
 module rz(angle, center=undef) {
   /* Rotate children `angle` degrees around `center`. */
@@ -341,16 +341,20 @@ module spacer() {
           left_half(switch_holes=false, key_size=switch_hole_size + 3);
 
           // Leave some extra space for the micro-controller at the top.
-          rotate_half() add_hand_separation()
+          rotate_half() add_hand_separation() {
             keycap_hole([1.5*row_spacing, 5.75*column_spacing]);
-          mirror ([1,0,0]) rotate_half() add_hand_separation()
+            keycap_hole([(n_cols+0.75)*row_spacing, 4.5*column_spacing]);
+          }
+          mirror ([1,0,0]) rotate_half() add_hand_separation() {
             keycap_hole([1.5*row_spacing, 5.75*column_spacing]);
+            keycap_hole([(n_cols+0.75)*row_spacing, 4.5*column_spacing]);
+          }
 
         }
 
         /* add the USB cable hole: */
-        translate([cable_hole_offset - cable_hole_width, 2*column_spacing,-1]) {
-          cube([cable_hole_width, (2*n_rows) * column_spacing,50]);
+        translate([cable_hole_offset + cable_hole_width/2, 6*column_spacing,-1]) {
+          cube([cable_hole_width, (n_rows) * column_spacing,50], center=true);
         }
       }
       screw_holes(washer_radius, washer_connector=true);
