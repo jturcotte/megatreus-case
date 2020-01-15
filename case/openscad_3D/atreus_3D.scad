@@ -359,6 +359,15 @@ module spacer() {
   }
 }
 
+module bottom_plate() {
+  hole_width = 70;
+  difference() {
+    base_plate();
+    translate([-hole_width/2, n_rows * column_spacing + 2, -0.5])
+      cube([hole_width, 500,4]);
+  }
+}
+
 module spacer_quadrant(spacer_quadrant_number) {
   /* Cut a spacer. */
   intersection() {
@@ -369,7 +378,7 @@ module spacer_quadrant(spacer_quadrant_number) {
 
 module bottom_quadrant(left) {
   intersection() {
-    base_plate();
+    bottom_plate();
     translate([0, -500]) {
       if (left)
         cube([1000, 1000,3]);
@@ -399,16 +408,21 @@ module quartered_bottom()
 translate([0,0,12]) top_plate(top_most_plate_bezel);
 translate([0,0,9]) top_plate();
 // projection(cut = false) 
-  color("DimGray") translate([0, 0, 6]) { switch_plate(); }
-translate([370, 0,0]) {
+color("DimGray") translate([0, 0, 6]) { switch_plate(); }
+
+// translate([0,0,-3])
+translate([370,0,0])
+ {
   if (quarter_spacer == true) {
     quartered_bottom();
   }
   else {
-    base_plate();
+    bottom_plate();
   }
 }
+
 translate([0,0,3]) spacer();
+
 translate([0,0,0]) {
   if (quarter_spacer == true) {
     quartered_spacer();
