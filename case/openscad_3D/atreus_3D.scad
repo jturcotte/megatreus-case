@@ -374,9 +374,12 @@ module bottom_plate() {
 
 module spacer_quadrant(spacer_quadrant_number) {
   /* Cut a spacer. */
+  hole_to_center = -cable_hole_offset - cable_hole_width/2;
   intersection() {
     spacer();
-    translate([-cable_hole_offset + spacer_quadrant_number * 2 * cable_hole_offset, -500]) { cube([cable_hole_offset*2, 1000,3]); }
+    translate([-hole_to_center + spacer_quadrant_number * 2 * hole_to_center, -500 ]) {
+      cube([hole_to_center*2, 1000,3]);
+    }
   }
 }
 
